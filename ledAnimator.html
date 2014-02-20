@@ -6,12 +6,7 @@
 <body>
 <div id = "selt"></div>
 <script>
-function main() {
-	setLeds();
-	setupScenes();	
-}
-var delay = 500;
-var mode = "PLAY";
+
 var stage = new Kinetic.Stage({
 width: 720,
 height: 480,
@@ -36,7 +31,7 @@ var sceneTitle = new Kinetic.Text({
 	    x: 400,
         y: 200,
         fontSize: 18,
-        fontFamily: 'Arial',
+        fontFamily: 'Courier',
         fill: '#555',
         width: 380
 	
@@ -51,18 +46,11 @@ board.add(rect);
 var rad = 15;
 var led = [];
 
-function Scene(sceneId, ledStates) {
-	this.sceneId = sceneId;
-	this.ledStates = ledStates;
-}
 
-function Sequence(sequenceId, sceneN, selector){
-	this.sequenceId = sequenceId;
-	this.sceneN = sceneN;
-	this.selector = selector;
-}
+
 
 var names = ["led2", "led3", "led4", "led5", "led6", "led7", "led8", "led9", "led10", "led11", "led12", "led13", "led14", "led15"];
+
 for(var i = 1; i <= 14; i++) {
 	(function() {
 		var n = i;
@@ -94,13 +82,35 @@ for(var i = 1; i <= 14; i++) {
 	})();
 }
 
+function main() {
+	setLeds();
+	setupScenes();	
+	updateSceneLeds();
+	//playCurrentSequence();
+}
+
+function Scene(sceneId, ledStates) {
+	this.sceneId = sceneId;
+	this.ledStates = ledStates;
+}
+
+function Sequence(sequenceId, sceneN, selector){
+	this.sequenceId = sequenceId;
+	this.sceneN = sceneN;
+	this.selector = selector;
+}
+
+
+var mode = "PLAY";
 var currentSceneId = 0;
 var currentSequenceId = 0;
 var curTime = 0;
 var delayStep = 100;
 var delayScale = 1000;
 var delayVal = 0.8 * delayScale;
+var curIdx = 0;
 var scenes = [];
+
 scenes[0] = new Scene(0, [0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1]);
 scenes[1] = new Scene(1, [0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0]);
 scenes[2] = new Scene(2, [1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1]);
@@ -113,16 +123,30 @@ function setLeds() {
 		(function() {
 			var i = j;
 			board.find("#"+names[i]).on("mousedown", function() {
-				if(scenes[currentSceneId].ledStates[i] == 0) {
-					scenes[currentSceneId].ledStates[i] = 1;
-					console.log(names[i]);
-				} 
-				else {
-					scenes[currentSceneId].ledStates[i] = 0;
+				if(mode == "EDIT") {
+					if(scenes[currentSceneId].ledStates[i] == 0) {
+						scenes[currentSceneId].ledStates[i] = 1;
+						console.log(names[i]);
+					} 
+					else {
+						scenes[currentSceneId].ledStates[i] = 0;
+					}
 				}
 			});
 		})();
 	}
+}
+
+function playCurrentSequence() {
+	mode = "PLAY";
+	if(mode = "PLAY") {
+		setInterval(tickStart, 100);
+	} else {}
+}
+
+function editCurrentSequence() {
+	mode = "EDIT";
+	
 }
 
 function updateSceneLeds() {
@@ -135,32 +159,47 @@ function updateSceneLeds() {
 		}
 	}
 }                        
-var sel = 0;
-function setSelector() {
-	sel = 1;
-}
 
-setTimeout(setSelector(), 1000);
 
 function updateSequenceScenes() {
 	currentSceneId = sequences[currentSequenceId].sceneN[sequences[currentSequenceId].selector];
-	
+	console.log("Selector is: " + sequences[currentSequenceId].selector);
 }         
 
 //setLeds();
-var anim = new Kinetic.Animation(function(frame) {
-if(curTime < delay) {
-     curTime += 10;
+
+function tickStart() {
+	console.log("tickStart() reached");
+	if(curTime < delayVal) {
+     curTime += delayStep;
+	 console.log("curTime is " + curTime);
 	 return;
+	}
+	
+	if(mode == "PLAY") {
+		console.log("Play Mode");
+		if(curIdx < (sequences[currentSequenceId].sceneN.length - 1)) {
+			curIdx += 1;
+			
+		}
+		else {
+			curIdx = 0;
+		}
+		sequences[currentSequenceId].selector = curIdx;
+		updateSequenceScenes();
+	}
+	updateSceneLeds();
+	curTime = 0;
 }
-updateSceneLeds();
-if(mode == "PLAY") {
-     sequences[currentSequenceId].selector = currentSceneId++;
-	updateSequenceScenes();
+
+var anim = new Kinetic.Animation(function(frame) {
+
+if(mode == "EDIT") {
+	updateSceneLeds();
 }
 sceneTitle.setText("Current Scene: " + currentSceneId);
 
-curTime = 0;
+
 }, layer);
 anim.start();
 
