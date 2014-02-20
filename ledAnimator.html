@@ -8,8 +8,8 @@
 <script>
 
 var stage = new Kinetic.Stage({
-width: 720,
-height: 480,
+width: 2000,
+height: 2000,
 container: 'selt'
 });
 var layer = new Kinetic.Layer({
@@ -18,8 +18,18 @@ var layer = new Kinetic.Layer({
 });
 
 var rect = new Kinetic.Rect({
+width: 400,
+height: 400, 
+id: "re1",
+fill: 'green',
+stroke: 'black',
+strokeWidth: 5,
+
+});
+
+var rectSmall = new Kinetic.Rect({
 width: 200,
-height: 300, 
+height: 200, 
 id: "re1",
 fill: 'green',
 stroke: 'black',
@@ -34,21 +44,27 @@ var sceneTitle = new Kinetic.Text({
         fontFamily: 'Courier',
         fill: '#555',
         width: 380
-	
+
 });
 
 var offColor = "gray";
 var onColor = "white";
 var board = new Kinetic.Group({
-draggable: true
+	draggable:true
+});
+var boardScene1 = new Kinetic.Group({
+	draggable:true,
+	x: 500,
+	y: 500
 });
 board.add(rect);
+boardScene1.add(rectSmall);
 var rad = 15;
 var led = [];
 
 
 
-
+var x = [];
 var names = ["led2", "led3", "led4", "led5", "led6", "led7", "led8", "led9", "led10", "led11", "led12", "led13", "led14", "led15"];
 
 for(var i = 1; i <= 14; i++) {
@@ -63,7 +79,8 @@ for(var i = 1; i <= 14; i++) {
 			id: names[i-1],
 			stroke: "black",
 			strokeWidth: 4,
-			state:0
+			state:0,
+			draggable: true
 			});
 		} else if(n > 7){
 			var led = new Kinetic.Circle({
@@ -74,12 +91,86 @@ for(var i = 1; i <= 14; i++) {
 			id: names[i-1],
 			stroke: "black",
 			strokeWidth: 4,
-			state:0
+			state:0,
+			draggable: true
 			});
 		}
+	boardScene1.add(led);	
 	board.add(led);
-	
+
 	})();
+}
+
+function setupScenes() {
+	for(var j = 0; j < scenes.length; j++) {
+		(function() {
+			var i = j;
+			var sceneHolder = new Kinetic.Group({
+				id: "scene"+i
+			});
+
+			var sceneNumber = new Kinetic.Text({
+			x: 415 + (60 * i),
+			y: 310,
+			fontSize: 32,
+			fontFamily: 'Arial',
+			fill: '#EEE',
+			width: 380,
+			text: (i)
+			});
+
+			var sceneBox = new Kinetic.Rect({
+				x: 400 + (60 * i),
+				y: 300,
+				width: 50, 
+				height:50,
+				fill: "green",
+				id: "scene"+i+"Box"
+			});
+
+			sceneHolder.add(sceneBox);
+			sceneHolder.add(sceneNumber);
+			layer.add(sceneHolder);
+
+			layer.find("#"+"scene"+i).on("click", function() {
+				changeScene(i);	
+				if(i == currentSceneId) {
+					layer.find("#"+"scene"+i+"Box").setFill("red");
+				}
+			});
+			layer.find("#"+"scene"+i).on("mouseover", function() {
+				sceneHolder.find("#"+"scene"+i+"Box").setFill("blue");
+			});
+
+			layer.find("#"+"scene"+i).on("mouseout", function() {
+
+				layer.find("#"+"scene"+i+"Box").setFill("green");
+
+			});
+
+		})();
+	}
+}
+
+function setLeds() {
+	for( var j = 0; j <= 13; j++ ) {
+		(function() {
+			var i = j;
+			board.find("#"+names[i]).on("mousedown", function() {
+				if(mode == "EDIT") {
+					if(scenes[currentSceneId].ledStates[i] == 0) {
+						scenes[currentSceneId].ledStates[i] = 1;
+						console.log(names[i]);
+						console.log("x: " + this.getX());
+						console.log("y: " + this.getY());
+					} 
+					else {
+						scenes[currentSceneId].ledStates[i] = 0;
+					}
+				}
+			});
+		})();
+	}
 }
 
 function main() {
@@ -87,6 +178,7 @@ function main() {
 	setupScenes();	
 	updateSceneLeds();
 	//playCurrentSequence();
+	setInterval(tickStart, 100);
 }
 
 function Scene(sceneId, ledStates) {
@@ -101,7 +193,7 @@ function Sequence(sequenceId, sceneN, selector){
 }
 
 
-var mode = "PLAY";
+var mode = "EDIT";
 var currentSceneId = 0;
 var currentSequenceId = 0;
 var curTime = 0;
@@ -115,38 +207,18 @@ scenes[0] = new Scene(0, [0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1]);
 scenes[1] = new Scene(1, [0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0]);
 scenes[2] = new Scene(2, [1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1]);
 var sequences = [];
-sequences[0] = new Sequence(0, [0, 1, 0], 1);
+sequences[0] = new Sequence(0, [0, 1, 2, 1, 0, 2], 1);
 sequences[1] = new Sequence(0, [1, 2, 0], 2);
 
-function setLeds() {
-	for( var j = 0; j <= 13; j++ ) {
-		(function() {
-			var i = j;
-			board.find("#"+names[i]).on("mousedown", function() {
-				if(mode == "EDIT") {
-					if(scenes[currentSceneId].ledStates[i] == 0) {
-						scenes[currentSceneId].ledStates[i] = 1;
-						console.log(names[i]);
-					} 
-					else {
-						scenes[currentSceneId].ledStates[i] = 0;
-					}
-				}
-			});
-		})();
-	}
-}
+
 
 function playCurrentSequence() {
 	mode = "PLAY";
-	if(mode = "PLAY") {
-		setInterval(tickStart, 100);
-	} else {}
 }
 
 function editCurrentSequence() {
 	mode = "EDIT";
-	
+
 }
 
 function updateSceneLeds() {
@@ -169,18 +241,18 @@ function updateSequenceScenes() {
 //setLeds();
 
 function tickStart() {
-	console.log("tickStart() reached");
+	//console.log("tickStart() reached");
 	if(curTime < delayVal) {
      curTime += delayStep;
-	 console.log("curTime is " + curTime);
+	 //console.log("curTime is " + curTime);
 	 return;
 	}
-	
+
 	if(mode == "PLAY") {
 		console.log("Play Mode");
 		if(curIdx < (sequences[currentSequenceId].sceneN.length - 1)) {
 			curIdx += 1;
-			
+
 		}
 		else {
 			curIdx = 0;
@@ -221,60 +293,12 @@ function changeScene(sceneNum) {
 	currentSceneId = sceneNum;	
 }
 
-function setupScenes() {
-	for(var j = 0; j < scenes.length; j++) {
-		(function() {
-			var i = j;
-			var sceneHolder = new Kinetic.Group({
-				id: "scene"+i
-			});
-			
-			var sceneNumber = new Kinetic.Text({
-			x: 415 + (60 * i),
-			y: 310,
-			fontSize: 32,
-			fontFamily: 'Arial',
-			fill: '#EEE',
-			width: 380,
-			text: (i)
-			});
-			
-			var sceneBox = new Kinetic.Rect({
-				x: 400 + (60 * i),
-				y: 300,
-				width: 50, 
-				height:50,
-				fill: "green",
-				id: "scene"+i+"Box"
-			});
-	
-			sceneHolder.add(sceneBox);
-			sceneHolder.add(sceneNumber);
-			layer.add(sceneHolder);
-			
-			layer.find("#"+"scene"+i).on("click", function() {
-				changeScene(i);	
-				if(i == currentSceneId) {
-					layer.find("#"+"scene"+i+"Box").setFill("red");
-				}
-			});
-			layer.find("#"+"scene"+i).on("mouseover", function() {
-				sceneHolder.find("#"+"scene"+i+"Box").setFill("blue");
-			});
-			
-			layer.find("#"+"scene"+i).on("mouseout", function() {
-				
-				layer.find("#"+"scene"+i+"Box").setFill("green");
-				
-			});
-			
-		})();
-	}
-}
+
 
 main();
 
 layer.add(board);
+layer.add(boardScene1);
 layer.add(sceneTitle);
 stage.add(layer);
 
