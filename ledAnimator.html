@@ -1,20 +1,43 @@
 <html>
 <head>
+<style>
+#container {
+	overflow: hidden;
+	border: 1px solid black;
+	width:1080;
+}
+#container div {
+	float:left;
+}
+
+</style>
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
 <script src="http://d3lp1msu2r81bx.cloudfront.net/kjs/js/lib/kinetic-v5.0.1.js"></script>
 </head>
 <body>
+<div id = "container">
 <div id = "selt"></div>
+<div id = "editBox"><div>
+</div>
+
 <script>
 
-var stage = new Kinetic.Stage({
-width: 2000,
-height: 2000,
+var mainStage = new Kinetic.Stage({
+width: 400,
+height: 400,
 container: 'selt'
 });
-var layer = new Kinetic.Layer({
-	strokeWidth: 5,
-	stroke: "black"
+
+var editStage = new Kinetic.Stage({
+width: 680,
+height: 400,
+container: 'editBox'
+});
+
+var mainBoardLayer = new Kinetic.Layer({
+});
+
+var editSequencesLayer = new Kinetic.Layer({
 });
 
 var rect = new Kinetic.Rect({
@@ -50,7 +73,8 @@ var sceneTitle = new Kinetic.Text({
 var offColor = "gray";
 var onColor = "white";
 var board = new Kinetic.Group({
-	draggable:true
+	width:400,
+	height:400
 });
 var boardScene1 = new Kinetic.Group({
 	draggable:true,
@@ -59,22 +83,22 @@ var boardScene1 = new Kinetic.Group({
 });
 board.add(rect);
 boardScene1.add(rectSmall);
-var rad = 15;
 var led = [];
 
 
 
 var x = [];
 var names = ["led2", "led3", "led4", "led5", "led6", "led7", "led8", "led9", "led10", "led11", "led12", "led13", "led14", "led15"];
-
-for(var i = 1; i <= 14; i++) {
-	(function() {
-		var n = i;
-		if(n <= 7) {
+function setupLeds(groupName) {
+	var rad = (groupName.getWidth() / (26 + (2 / 3)));
+	console.log(rad);
+	for(var i = 1; i <= 14; i++) {
+		(function() {
+			var n = i;
 			var led = new Kinetic.Circle({
-			radius: 15,
+			radius: rad,
 			x: rad * 3,
-			y: rad + (rad * 2 *((n))),
+			y: 20 + (5 * i),
 			fill: offColor,
 			id: names[i-1],
 			stroke: "black",
@@ -82,69 +106,94 @@ for(var i = 1; i <= 14; i++) {
 			state:0,
 			draggable: true
 			});
-		} else if(n > 7){
-			var led = new Kinetic.Circle({
-			radius: 15,
-			x: (rad * 3)*3,
-			y: rad + (rad * 2 *((n - 7))),
-			fill: offColor,
-			id: names[i-1],
-			stroke: "black",
-			strokeWidth: 4,
-			state:0,
-			draggable: true
-			});
-		}
-	boardScene1.add(led);	
-	board.add(led);
+				
+		groupName.add(led);
 
-	})();
+		})();
+	}
+}
+
+function changeLedPositions() {
+	for(var k = 1; k <= 14; k++) {
+		for(var j = 0; j < scenes.length; j++) {
+			editSequencesLayer.find(".Board" + names[k-1])[j].setX(((board.find("#"+names[k - 1])[0].getX()) * editSequencesLayer.find("#scene" + j)[0].getWidth()) / board.getWidth());
+			editSequencesLayer.find(".Board" + names[k-1])[j].setY(((board.find("#"+names[k - 1])[0].getY()) * editSequencesLayer.find("#scene" + j)[0].getWidth()) / board.getWidth());
+		}
+	}
 }
 
 function setupScenes() {
 	for(var j = 0; j < scenes.length; j++) {
 		(function() {
 			var i = j;
+			var sceneWidth = 100;
 			var sceneHolder = new Kinetic.Group({
-				id: "scene"+i
+				id: "scene"+i,
+				x: (sceneWidth / 2) + (((sceneWidth / 2) * (5/2)) * i),
+				y: (sceneWidth / 2),
+				stroke: "black",
+				strokeWidth: 3,
+				width: sceneWidth,
+				height: sceneWidth
 			});
 
 			var sceneNumber = new Kinetic.Text({
-			x: 415 + (60 * i),
-			y: 310,
 			fontSize: 32,
 			fontFamily: 'Arial',
 			fill: '#EEE',
 			width: 380,
 			text: (i)
 			});
+			
+			var rad = (sceneHolder.getWidth() / (26 + (2 / 3)));
+			console.log(rad);
 
+			
 			var sceneBox = new Kinetic.Rect({
-				x: 400 + (60 * i),
-				y: 300,
-				width: 50, 
-				height:50,
+				width: sceneWidth, 
+				height: sceneWidth,
 				fill: "green",
 				id: "scene"+i+"Box"
 			});
-
+			
 			sceneHolder.add(sceneBox);
 			sceneHolder.add(sceneNumber);
-			layer.add(sceneHolder);
+			
+			for(var k = 1; k <= 14; k++) {
+				(function() {
+					var n = k;
+					var led = new Kinetic.Circle({
+					radius: rad,
+					x: board.find("#"+names[n - 1])[0].getX(),
+					y: board.find("#"+names[n - 1])[0].getY(),
+					fill: offColor,
+					name: "Board"+names[k-1],
+					stroke: "black",
+					strokeWidth: 2,
+					state:0,
+					draggable: true
+					});
+						
+				sceneHolder.add(led);
 
-			layer.find("#"+"scene"+i).on("click", function() {
+				})();
+			}
+			
+			editSequencesLayer.add(sceneHolder);
+
+			editSequencesLayer.find("#scene"+i).on("click", function() {
 				changeScene(i);	
 				if(i == currentSceneId) {
-					layer.find("#"+"scene"+i+"Box").setFill("red");
+					editSequencesLayer.find("#scene"+i+"Box").setFill("red");
 				}
 			});
-			layer.find("#"+"scene"+i).on("mouseover", function() {
-				sceneHolder.find("#"+"scene"+i+"Box").setFill("blue");
+			editSequencesLayer.find("#scene"+i).on("mouseover", function() {
+				editSequencesLayer.find("#scene"+i+"Box").setFill("blue");
 			});
 
-			layer.find("#"+"scene"+i).on("mouseout", function() {
+			editSequencesLayer.find("#scene"+i).on("mouseout", function() {
 
-				layer.find("#"+"scene"+i+"Box").setFill("green");
+				editSequencesLayer.find("#scene"+i+"Box").setFill("green");
 
 			});
 
@@ -152,7 +201,7 @@ function setupScenes() {
 	}
 }
 
-function setLeds() {
+function setupLedEvents() {
 	for( var j = 0; j <= 13; j++ ) {
 		(function() {
 			var i = j;
@@ -161,8 +210,8 @@ function setLeds() {
 					if(scenes[currentSceneId].ledStates[i] == 0) {
 						scenes[currentSceneId].ledStates[i] = 1;
 						console.log(names[i]);
-						console.log("x: " + this.getX());
-						console.log("y: " + this.getY());
+						console.log("x: " + board.find("#"+names[i])[0].getX());
+						console.log("y: " + board.find("#"+names[i])[0].getY());
 					} 
 					else {
 						scenes[currentSceneId].ledStates[i] = 0;
@@ -174,9 +223,10 @@ function setLeds() {
 }
 
 function main() {
-	setLeds();
+	setupLeds(board);
+	setupLedEvents();
 	setupScenes();	
-	updateSceneLeds();
+	updateSceneLeds(scenes[currentSceneId], board);
 	//playCurrentSequence();
 	setInterval(tickStart, 100);
 }
@@ -221,15 +271,16 @@ function editCurrentSequence() {
 
 }
 
-function updateSceneLeds() {
+function updateSceneLeds(sceneNum, boardNum) {
 
-	for( var j = 0; j < scenes[currentSceneId].ledStates.length; j++) {
-		if(scenes[currentSceneId].ledStates[j] == 1) {
-			ledOn(j + 2);
+	for( var j = 0; j < sceneNum.ledStates.length; j++) {
+		if(sceneNum.ledStates[j] == 1) {
+			ledOn(j + 2, boardNum);
 		} else {
-			ledOff(j + 2);
+			ledOff(j + 2, boardNum);
 		}
 	}
+	
 }                        
 
 
@@ -260,31 +311,41 @@ function tickStart() {
 		sequences[currentSequenceId].selector = curIdx;
 		updateSequenceScenes();
 	}
-	updateSceneLeds();
+	updateSceneLeds(scenes[currentSceneId], board);
 	curTime = 0;
 }
 
 var anim = new Kinetic.Animation(function(frame) {
 
 if(mode == "EDIT") {
-	updateSceneLeds();
+	updateSceneLeds(scenes[currentSceneId], board);
 }
 sceneTitle.setText("Current Scene: " + currentSceneId);
 
 
-}, layer);
+}, mainBoardLayer);
 anim.start();
 
-function ledOn(ledNum) {
-	var e = board.find("#" + names[ledNum - 2]);
-	e.fill(onColor);
+var anim2 = new Kinetic.Animation(function(frame) {
+	//setupScenes();
+	changeLedPositions();
+	for(var i = 0; i < scenes.length; i++) {
+		//updateSceneLeds(i, board);
+		//console.log(i);
+	}
+}, editSequencesLayer);
+anim2.start();
+
+function ledOn(ledNum, boardNum) {
+	var e = boardNum.find("#" + names[ledNum - 2]);
+	e.setFill(onColor);
 	led[ledNum] = 1;
 	//console.log(names[ledNum - 2] + " turned on");
 }
 
-function ledOff(ledNum) {
-	var e = board.find("#" + names[ledNum - 2]);
-	e.fill(offColor);
+function ledOff(ledNum, boardNum) {
+	var e = boardNum.find("#" + names[ledNum - 2]);
+	e.setFill(offColor);
 	led[ledNum] = 0;
 	//console.log(names[ledNum - 2] + " turned off");
 }
@@ -297,10 +358,11 @@ function changeScene(sceneNum) {
 
 main();
 
-layer.add(board);
-layer.add(boardScene1);
-layer.add(sceneTitle);
-stage.add(layer);
+mainBoardLayer.add(board);
+mainBoardLayer.add(boardScene1);
+mainBoardLayer.add(sceneTitle);
+editStage.add(editSequencesLayer);
+mainStage.add(mainBoardLayer);
 
 
 </script>
