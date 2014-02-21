@@ -97,8 +97,8 @@ function setupLeds(groupName) {
 			var n = i;
 			var led = new Kinetic.Circle({
 			radius: rad,
-			x: rad * 3,
-			y: 20 + (5 * i),
+			x: 20 + (21 * i),
+			y: 20 + (21 * i),
 			fill: offColor,
 			id: names[i-1],
 			stroke: "black",
@@ -256,6 +256,7 @@ var scenes = [];
 scenes[0] = new Scene(0, [0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1]);
 scenes[1] = new Scene(1, [0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0]);
 scenes[2] = new Scene(2, [1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1]);
+scenes[3] = new Scene(2, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 var sequences = [];
 sequences[0] = new Sequence(0, [0, 1, 2, 1, 0, 2], 1);
 sequences[1] = new Sequence(0, [1, 2, 0], 2);
@@ -283,6 +284,17 @@ function updateSceneLeds(sceneNum, boardNum) {
 	
 }                        
 
+function updateNewSceneLeds(sceneNum, boardNum) {
+
+	for( var j = 0; j < sceneNum.ledStates.length; j++) {
+		if(sceneNum.ledStates[j] == 1) {
+			NewLedOn(j + 2, boardNum);
+		} else {
+			NewLedOff(j + 2, boardNum);
+		}
+	}
+	
+}   
 
 function updateSequenceScenes() {
 	currentSceneId = sequences[currentSequenceId].sceneN[sequences[currentSequenceId].selector];
@@ -332,6 +344,8 @@ var anim2 = new Kinetic.Animation(function(frame) {
 	for(var i = 0; i < scenes.length; i++) {
 		//updateSceneLeds(i, board);
 		//console.log(i);
+		updateNewSceneLeds(scenes[i], editSequencesLayer.find("#scene" + i)[0]);
+		//editSequencesLayer.find("#scene" + i)[0].find(".Boardled13")[0].setFill("blue")
 	}
 }, editSequencesLayer);
 anim2.start();
@@ -347,6 +361,18 @@ function ledOff(ledNum, boardNum) {
 	var e = boardNum.find("#" + names[ledNum - 2]);
 	e.setFill(offColor);
 	led[ledNum] = 0;
+	//console.log(names[ledNum - 2] + " turned off");
+}
+
+function NewLedOn(ledNum, boardNum) {
+	var e = boardNum.find(".Board" + names[ledNum - 2])[0];
+	e.setFill(onColor);
+	//console.log(names[ledNum - 2] + " turned on");
+}
+
+function NewLedOff(ledNum, boardNum) {
+	var e = boardNum.find(".Board" + names[ledNum - 2])[0];
+	e.setFill(offColor);
 	//console.log(names[ledNum - 2] + " turned off");
 }
 
