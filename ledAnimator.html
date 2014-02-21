@@ -23,21 +23,16 @@
 <script>
 
 var mainStage = new Kinetic.Stage({
-width: 400,
-height: 400,
+width: 1080,
+height: 800,
 container: 'selt'
-});
-
-var editStage = new Kinetic.Stage({
-width: 680,
-height: 400,
-container: 'editBox'
 });
 
 var mainBoardLayer = new Kinetic.Layer({
 });
 
 var editSequencesLayer = new Kinetic.Layer({
+	x: 400
 });
 
 var rect = new Kinetic.Rect({
@@ -47,14 +42,14 @@ id: "re1",
 fill: 'green',
 stroke: 'black',
 strokeWidth: 5,
-
+draggable:false
 });
 
 var rectSmall = new Kinetic.Rect({
-width: 200,
+width: mainStage.getWidth(),
 height: 200, 
 id: "re1",
-fill: 'green',
+fill: 'gray',
 stroke: 'black',
 strokeWidth: 5,
 
@@ -76,13 +71,11 @@ var board = new Kinetic.Group({
 	width:400,
 	height:400
 });
-var boardScene1 = new Kinetic.Group({
-	draggable:true,
-	x: 500,
+var timeline = new Kinetic.Group({
 	y: 500
 });
 board.add(rect);
-boardScene1.add(rectSmall);
+timeline.add(rectSmall);
 var led = [];
 
 
@@ -385,9 +378,9 @@ function changeScene(sceneNum) {
 main();
 
 mainBoardLayer.add(board);
-mainBoardLayer.add(boardScene1);
+mainBoardLayer.add(timeline);
 mainBoardLayer.add(sceneTitle);
-editStage.add(editSequencesLayer);
+mainStage.add(editSequencesLayer);
 mainStage.add(mainBoardLayer);
 
 
